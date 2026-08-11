@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum SongStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum AlbumStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum DownloadStatus {
+  PENDING
+  DOWNLOADING
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  avatarUrl    String?
+  role         Role     @default(USER)
+  authProvider String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  playlists         Playlist[]
+  songLikes         SongLike[]
+  albumLikes        AlbumLike[]
+  artistFollowers   ArtistFollower[]
+  listeningHistory  ListeningHistory[]
+  downloads         Download[]
+  recentlyPlayed    RecentlyPlayed[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  biography String?
+  imagePath String?
+  coverPath String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  songs   Song[]
+  albums  Album[]
+  followers ArtistFollower[]
+
+  @@index([slug])
+  @@index([name])
+}
+
+model Album {
+  id          String      @id @default(uuid())
+  title       String
+  slug        String      @unique
+  description String?
+  coverPath   String?
+  releaseDate DateTime?
+  status      AlbumStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  artistId String
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  songs      Song[]
+  albumLikes AlbumLike[]
+
+  @@index([slug])
+  @@index([artistId])
+  @@index([status])
+  @@index([releaseDate])
+}
+
+model Song {
+  id          String     @id @default(uuid())
+  title       String
+  slug        String     @unique
+  description String?
+  audioPath   String?
+  coverPath   String?
+  duration    Int?
+  bitrate     Int?
+  format      String?
+  fileSize    Int?
+  releaseDate DateTime?
+  status      SongStatus @default(DRAFT)
+  playCount   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  artistId String
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  albumId String?
+  album   Album? @relation(fields: [albumId], references: [id], onDelete: SetNull)
+
+  genreId String?
+  genre   Genre? @relation(fields: [genreId], references: [id], onDelete: SetNull)
+
+  songMoods       SongMood[]
+  songLikes       SongLike[]
+  playlistSongs   PlaylistSong[]
+  listeningHistory ListeningHistory[]
+  downloads       Download[]
+  recentlyPlayed  RecentlyPlayed[]
+
+  @@index([slug])
+  @@index([artistId])
+  @@index([albumId])
+  @@index([genreId])
+  @@index([status])
+  @@index([releaseDate])
+  @@index([playCount])
+}
+
+model Genre {
+  id    String @id @default(uuid())
+  name  String @unique
+  slug  String @unique
+  image String?
+
+  songs Song[]
+
+  @@index([slug])
+}
+
+model Mood {
+  id    String @id @default(uuid())
+  name  String @unique
+  slug  String @unique
+  color String?
+  icon  String?
+
+  songMoods SongMood[]
+
+  @@index([slug])
+}
+
+model SongMood {
+  id       String @id @default(uuid())
+  songId   String
+  moodId   String
+  song     Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  mood     Mood   @relation(fields: [moodId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([songId, moodId])
+  @@index([songId])
+  @@index([moodId])
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  coverPath   String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  playlistSongs PlaylistSong[]
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  position   Int
+  addedAt    DateTime @default(now())
+
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  songId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, songId])
+  @@index([playlistId])
+  @@index([songId])
+  @@index([position])
+}
+
+model SongLike {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  songId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
+}
+
+model AlbumLike {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  albumId String
+  album   Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, albumId])
+  @@index([userId])
+  @@index([albumId])
+}
+
+model ArtistFollower {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  artistId String
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artistId])
+  @@index([userId])
+  @@index([artistId])
+}
+
+model ListeningHistory {
+  id             String   @id @default(uuid())
+  playedAt       DateTime @default(now())
+  durationPlayed Int?
+  completed      Boolean  @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  songId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([songId])
+  @@index([playedAt])
+}
+
+model Download {
+  id           String         @id @default(uuid())
+  downloadedAt DateTime       @default(now())
+  size         Int?
+  status       DownloadStatus @default(PENDING)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  songId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
+}
+
+model RecentlyPlayed {
+  id        String   @id @default(uuid())
+  playedAt  DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  songId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
+  @@index([playedAt])
+}
