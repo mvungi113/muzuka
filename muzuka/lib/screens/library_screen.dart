@@ -33,17 +33,13 @@ class LibraryScreen extends ConsumerWidget {
               context,
               icon: Icons.queue_music,
               title: 'Playlists',
-              onTap: () {
-                // TODO: Navigate to playlists
-              },
+              onTap: () => context.push('/playlists'),
             ),
             _buildMenuItem(
               context,
               icon: Icons.download_done,
               title: 'Downloads',
-              onTap: () {
-                // TODO: Navigate to downloads
-              },
+              onTap: () => context.push('/downloads'),
             ),
             _buildMenuItem(
               context,

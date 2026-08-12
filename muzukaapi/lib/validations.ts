@@ -15,8 +15,10 @@ export const songSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   artistId: z.string().uuid(),
-  albumId: z.string().uuid().optional(),
-  genreId: z.string().uuid().optional(),
+  albumId: z.string().uuid().optional().nullable(),
+  genreId: z.string().uuid().optional().nullable(),
+  audioPath: z.string().max(500).optional(),
+  coverPath: z.string().max(500).optional(),
   moodIds: z.array(z.string().uuid()).optional(),
   releaseDate: z.string().datetime().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']).optional(),
@@ -25,12 +27,15 @@ export const songSchema = z.object({
 export const artistSchema = z.object({
   name: z.string().min(1).max(200),
   biography: z.string().max(5000).optional(),
+  imagePath: z.string().max(500).optional(),
+  coverPath: z.string().max(500).optional(),
 });
 
 export const albumSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   artistId: z.string().uuid(),
+  coverPath: z.string().max(500).optional(),
   releaseDate: z.string().datetime().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']).optional(),
 });

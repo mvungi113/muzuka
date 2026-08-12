@@ -12,6 +12,8 @@ import '../screens/player/now_playing_screen.dart';
 import '../screens/song_detail_screen.dart';
 import '../screens/artist_detail_screen.dart';
 import '../screens/album_detail_screen.dart';
+import '../screens/playlists_screen.dart';
+import '../screens/downloads_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -85,6 +87,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/now-playing',
         fullscreenDialog: true,
         builder: (context, state) => const NowPlayingScreen(),
+      ),
+      GoRoute(
+        path: '/playlists',
+        builder: (context, state) => const PlaylistsScreen(),
+      ),
+      GoRoute(
+        path: '/downloads',
+        builder: (context, state) => const DownloadsScreen(),
       ),
     ],
   );
