@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/songs_provider.dart';
+import '../providers/recommendations_provider.dart';
 import '../widgets/song_cover.dart';
+import '../widgets/shimmer_loading.dart';
+import '../widgets/status_widgets.dart' as widgets;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +23,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Future.microtask(() {
       ref.read(trendingProvider.notifier).load();
       ref.read(newReleasesProvider.notifier).load();
+      ref.read(recommendationsProvider.notifier).load();
     });
   }
 
@@ -28,6 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final auth = ref.watch(authProvider);
     final trending = ref.watch(trendingProvider);
     final newReleases = ref.watch(newReleasesProvider);
+    final recommendations = ref.watch(recommendationsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -78,6 +83,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               songs: trending.songs,
               isLoading: trending.isLoading,
             ),
+            if (recommendations.madeForYou.isNotEmpty)
+              _buildSection(
+                context,
+                title: 'Made For You',
+                songs: recommendations.madeForYou,
+                isLoading: false,
+              ),
+            if (recommendations.basedOnMood.isNotEmpty)
+              _buildSection(
+                context,
+                title: 'Based on Your Mood',
+                songs: recommendations.basedOnMood,
+                isLoading: false,
+              ),
             _buildSection(
               context,
               title: 'New Releases',
@@ -116,20 +135,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           if (isLoading)
-            SizedBox(
-              height: 180,
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            )
+            const HorizontalListShimmer()
           else if (songs.isEmpty)
             SizedBox(
               height: 180,
-              child: Center(
-                child: Text(
-                  'No songs available',
-                  style: TextStyle(color: AppColors.textTertiary),
-                ),
+              child: widgets.EmptyWidget(
+                icon: Icons.music_note,
+                title: 'No songs available',
               ),
             )
           else

@@ -41,4 +41,7 @@ class ApiConstants {
 
   // Moods
   static const String moods = '/api/moods';
+
+  // Recommendations
+  static const String recommendations = '/api/recommendations';
 }

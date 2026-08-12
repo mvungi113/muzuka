@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
   { href: '/admin/songs', label: 'Songs', icon: '🎵' },
   { href: '/admin/artists', label: 'Artists', icon: '🎤' },
   { href: '/admin/albums', label: 'Albums', icon: '💿' },
