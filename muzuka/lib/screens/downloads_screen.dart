@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
+import '../models/song.dart';
 import '../providers/downloads_provider.dart';
 import '../providers/player_provider.dart';
 import '../widgets/song_cover.dart';
@@ -13,7 +15,7 @@ class DownloadsScreen extends ConsumerWidget {
     final state = ref.watch(downloadsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloads')),
+      appBar: AppBar(title: const Text('Downloads'), backgroundColor: AppColors.background, foregroundColor: AppColors.textPrimary),
       body: state.isLoading
           ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : state.downloads.isEmpty
@@ -23,15 +25,9 @@ class DownloadsScreen extends ConsumerWidget {
                     children: [
                       Icon(Icons.download_done, size: 64, color: AppColors.textTertiary),
                       const SizedBox(height: 16),
-                      Text(
-                        'No downloads yet',
-                        style: TextStyle(color: AppColors.textTertiary, fontSize: 16),
-                      ),
+                      Text('No downloads yet', style: TextStyle(color: AppColors.textTertiary, fontSize: 16)),
                       const SizedBox(height: 8),
-                      Text(
-                        'Songs you download will appear here',
-                        style: TextStyle(color: AppColors.textTertiary, fontSize: 14),
-                      ),
+                      Text('Songs you download will appear here', style: TextStyle(color: AppColors.textTertiary, fontSize: 14)),
                     ],
                   ),
                 )
@@ -44,16 +40,8 @@ class DownloadsScreen extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: SongCover(path: download.coverPath, size: 48),
-                        title: Text(
-                          download.title,
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          download.artistName ?? 'Unknown artist',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                        ),
+                        title: Text(download.title, style: const TextStyle(color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(download.artistName ?? 'Unknown artist', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                         trailing: PopupMenuButton(
                           itemBuilder: (context) => [
                             const PopupMenuItem(value: 'play', child: Text('Play')),
@@ -61,7 +49,21 @@ class DownloadsScreen extends ConsumerWidget {
                           ],
                           onSelected: (value) async {
                             if (value == 'play') {
-                              // TODO: Play from local file
+                              final song = Song(
+                                id: download.songId,
+                                title: download.title,
+                                slug: download.songId,
+                                artistId: '',
+                                status: 'PUBLISHED',
+                                playCount: 0,
+                                createdAt: DateTime.now(),
+                                coverPath: download.coverPath,
+                                artist: download.artistName != null
+                                    ? ArtistRef(id: '', name: download.artistName!, slug: '')
+                                    : null,
+                              );
+                              ref.read(playerProvider.notifier).playFromLocal(download.localPath, song);
+                              context.push('/now-playing');
                             } else if (value == 'delete') {
                               await ref.read(downloadsProvider.notifier).deleteDownload(download.songId);
                             }

@@ -121,6 +121,17 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     }
   }
 
+  Future<void> playFromLocal(String filePath, Song song) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _audioPlayer.setFilePath(filePath);
+      state = state.copyWith(currentSong: song, isLoading: false);
+      await _audioPlayer.play();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> playSong(Song song, {List<Song>? queue, int? index}) async {
     await play(song, queue: queue, index: index);
   }

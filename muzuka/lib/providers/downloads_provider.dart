@@ -88,16 +88,31 @@ class DownloadsNotifier extends StateNotifier<DownloadsState> {
       final file = File('${dir.path}/downloads.json');
       if (await file.exists()) {
         final content = await file.readAsString();
-        final List<dynamic> json = List.from(await Future.value(content.isEmpty ? [] : []));
-        // Simple JSON parse
-        final downloads = <DownloadItem>[];
-        state = state.copyWith(downloads: downloads, isLoading: false);
-      } else {
-        state = state.copyWith(isLoading: false);
+        if (content.isNotEmpty) {
+          final List<dynamic> json = List<dynamic>.from(
+            (await Future.value(content)).isEmpty ? [] : [],
+          );
+          try {
+            final parsed = (json).cast<Map<String, dynamic>>();
+            final downloads = parsed.map((e) => DownloadItem.fromJson(e)).toList();
+            state = state.copyWith(downloads: downloads, isLoading: false);
+            return;
+          } catch (_) {}
+        }
       }
+      state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<void> _saveDownloads() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/downloads.json');
+      final json = state.downloads.map((d) => d.toJson()).toList();
+      await file.writeAsString(json.toString());
+    } catch (_) {}
   }
 
   Future<bool> download(Song song) async {
@@ -149,6 +164,7 @@ class DownloadsNotifier extends StateNotifier<DownloadsState> {
         downloadingId: null,
       );
 
+      await _saveDownloads();
       return true;
     } catch (e) {
       state = state.copyWith(downloadingId: null, error: e.toString());
@@ -166,6 +182,7 @@ class DownloadsNotifier extends StateNotifier<DownloadsState> {
       state = state.copyWith(
         downloads: state.downloads.where((d) => d.songId != songId).toList(),
       );
+      await _saveDownloads();
       return true;
     } catch (e) {
       return false;

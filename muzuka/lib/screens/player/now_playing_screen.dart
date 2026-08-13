@@ -111,7 +111,53 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.more_vert),
-                      onPressed: () {},
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: AppColors.surface,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          ),
+                          builder: (context) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 4,
+                                  margin: const EdgeInsets.only(top: 12),
+                                  decoration: BoxDecoration(color: AppColors.textTertiary, borderRadius: BorderRadius.circular(2)),
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.info_outline, color: AppColors.textPrimary),
+                                  title: const Text('Song Info', style: TextStyle(color: AppColors.textPrimary)),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    if (song != null) context.push('/song/${song.id}');
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.artist, color: AppColors.textPrimary),
+                                  title: const Text('Go to Artist', style: TextStyle(color: AppColors.textPrimary)),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    if (song?.artistId != null) context.push('/artist/${song!.artistId}');
+                                  },
+                                ),
+                                if (song?.albumId != null)
+                                  ListTile(
+                                    leading: const Icon(Icons.album, color: AppColors.textPrimary),
+                                    title: const Text('Go to Album', style: TextStyle(color: AppColors.textPrimary)),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      context.push('/album/${song!.albumId}');
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
