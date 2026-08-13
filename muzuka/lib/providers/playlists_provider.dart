@@ -28,12 +28,14 @@ class PlaylistsNotifier extends StateNotifier<PlaylistsState> {
   Future<void> load() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.get<List<dynamic>>(
+      final response = await _api.get<Map<String, dynamic>>(
         ApiConstants.playlists,
-        fromJson: (json) => json as List,
+        fromJson: (json) => json,
       );
       if (response.success && response.data != null) {
-        final playlists = (response.data as List).map((e) => Playlist.fromJson(e)).toList();
+        final data = response.data!;
+        final items = (data['data'] as List?) ?? [];
+        final playlists = items.map((e) => Playlist.fromJson(e)).toList();
         state = state.copyWith(playlists: playlists, isLoading: false);
       } else {
         state = state.copyWith(isLoading: false, error: response.message);

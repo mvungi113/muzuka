@@ -29,6 +29,8 @@ class ApiConstants {
   // Playlists
   static const String playlists = '/api/playlists';
   static String playlist(String id) => '/api/playlists/$id';
+  static String playlistSongs(String id) => '/api/playlists/$id/songs';
+  static String playlistReorder(String id) => '/api/playlists/$id/songs/reorder';
 
   // Search
   static const String search = '/api/search';

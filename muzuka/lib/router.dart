@@ -13,6 +13,7 @@ import '../screens/song_detail_screen.dart';
 import '../screens/artist_detail_screen.dart';
 import '../screens/album_detail_screen.dart';
 import '../screens/playlists_screen.dart';
+import '../screens/playlist_detail_screen.dart';
 import '../screens/downloads_screen.dart';
 import '../screens/liked_songs_screen.dart';
 import '../screens/recently_played_screen.dart';
@@ -98,6 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/playlists',
         builder: (context, state) => const PlaylistsScreen(),
+      ),
+      GoRoute(
+        path: '/playlists/:id',
+        builder: (context, state) => PlaylistDetailScreen(playlistId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/downloads',

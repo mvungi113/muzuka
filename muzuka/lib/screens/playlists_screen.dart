@@ -88,6 +88,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                             }
                           },
                         ),
+                        onTap: () => context.push('/playlists/${playlist.id}'),
                       ),
                     );
                   },

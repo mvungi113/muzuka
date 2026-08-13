@@ -91,7 +91,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   AudioPlayer get audioPlayer => _audioPlayer;
 
-  Future<void> play(Song song, {List<Song>? queue}) async {
+  Future<void> play(Song song, {List<Song>? queue, int? index}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.get<Map<String, dynamic>>(
@@ -109,6 +109,7 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
         state = state.copyWith(currentSong: song, isLoading: false);
         await _audioPlayer.play();
+        recordHistory(song.id);
       } else {
         state = state.copyWith(
           isLoading: false,
@@ -118,6 +119,10 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  Future<void> playSong(Song song, {List<Song>? queue, int? index}) async {
+    await play(song, queue: queue, index: index);
   }
 
   Future<void> pause() async {
@@ -173,6 +178,9 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   void _onComplete() {
+    if (state.currentSong != null) {
+      recordHistory(state.currentSong!.id);
+    }
     if (state.repeatMode == RepeatMode.one && state.currentSong != null) {
       play(state.currentSong!);
     } else if (state.hasNext) {

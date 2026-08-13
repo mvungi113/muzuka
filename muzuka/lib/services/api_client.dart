@@ -200,6 +200,39 @@ class ApiClient {
     }
   }
 
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    Map<String, dynamic>? body,
+    T Function(dynamic)? fromJson,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl$path');
+
+      final response = await http.put(
+        uri,
+        headers: _headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final json = jsonDecode(response.body);
+        return ApiResponse.fromJson(json, fromJson);
+      } else {
+        final json = jsonDecode(response.body);
+        return ApiResponse(
+          success: false,
+          message: json['message'] ?? 'Request failed',
+          code: json['code'],
+        );
+      }
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: e.toString(),
+      );
+    }
+  }
+
   Future<ApiResponse<T>> delete<T>(
     String path, {
     T Function(dynamic)? fromJson,
