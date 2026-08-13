@@ -3,6 +3,20 @@ import prisma from '@/lib/prisma';
 import { requireAuth, comparePassword, hashPassword } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireAuth();
+    return Response.json(successResponse(user));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    if (message === 'UNAUTHORIZED') {
+      return Response.json(errorResponse('Not authenticated', 'UNAUTHORIZED'), { status: 401 });
+    }
+    console.error('Get me error:', error);
+    return Response.json(errorResponse(message), { status: 500 });
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireAuth();

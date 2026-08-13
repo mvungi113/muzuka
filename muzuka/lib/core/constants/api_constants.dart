@@ -2,7 +2,7 @@ class ApiConstants {
   ApiConstants._();
 
   // Base URL
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'http://192.168.1.124:3000';
 
   // Auth
   static const String register = '/api/auth/register';
@@ -30,7 +30,8 @@ class ApiConstants {
   static const String playlists = '/api/playlists';
   static String playlist(String id) => '/api/playlists/$id';
   static String playlistSongs(String id) => '/api/playlists/$id/songs';
-  static String playlistReorder(String id) => '/api/playlists/$id/songs/reorder';
+  static String playlistReorder(String id) =>
+      '/api/playlists/$id/songs/reorder';
 
   // Search
   static const String search = '/api/search';

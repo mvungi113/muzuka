@@ -68,7 +68,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final player = ref.watch(playerProvider);
     final song = player.currentSong;
 
