@@ -14,6 +14,13 @@ import '../screens/artist_detail_screen.dart';
 import '../screens/album_detail_screen.dart';
 import '../screens/playlists_screen.dart';
 import '../screens/downloads_screen.dart';
+import '../screens/liked_songs_screen.dart';
+import '../screens/recently_played_screen.dart';
+import '../screens/saved_albums_screen.dart';
+import '../screens/followed_artists_screen.dart';
+import '../screens/profile_screen.dart';
+import '../screens/genre_songs_screen.dart';
+import '../screens/mood_songs_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -95,6 +102,40 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/downloads',
         builder: (context, state) => const DownloadsScreen(),
+      ),
+      GoRoute(
+        path: '/liked-songs',
+        builder: (context, state) => const LikedSongsScreen(),
+      ),
+      GoRoute(
+        path: '/recently-played',
+        builder: (context, state) => const RecentlyPlayedScreen(),
+      ),
+      GoRoute(
+        path: '/saved-albums',
+        builder: (context, state) => const SavedAlbumsScreen(),
+      ),
+      GoRoute(
+        path: '/followed-artists',
+        builder: (context, state) => const FollowedArtistsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/genre/:id',
+        builder: (context, state) => GenreSongsScreen(
+          genreId: state.pathParameters['id']!,
+          genreName: state.uri.queryParameters['name'] ?? 'Genre',
+        ),
+      ),
+      GoRoute(
+        path: '/mood/:id',
+        builder: (context, state) => MoodSongsScreen(
+          moodId: state.pathParameters['id']!,
+          moodName: state.uri.queryParameters['name'] ?? 'Mood',
+        ),
       ),
     ],
   );

@@ -35,13 +35,33 @@ class ApiConstants {
 
   // History
   static const String history = '/api/history';
+  static const String recentlyPlayed = '/api/recently-played';
 
   // Genres
   static const String genres = '/api/genres';
+  static String genreSongs(String id) => '/api/genres/$id/songs';
 
   // Moods
   static const String moods = '/api/moods';
+  static String moodSongs(String id) => '/api/moods/$id/songs';
 
   // Recommendations
   static const String recommendations = '/api/recommendations';
+
+  // Top songs
+  static const String topSongs = '/api/songs/top';
+
+  // User collections
+  static const String likedSongs = '/api/user/liked-songs';
+  static const String likedAlbums = '/api/user/liked-albums';
+  static const String followedArtists = '/api/user/followed-artists';
+
+  // Profile
+  static const String changePassword = '/api/auth/change-password';
+
+  // Upload
+  static const String upload = '/api/upload';
+
+  // Admin
+  static const String adminUsers = '/api/admin/users';
 }

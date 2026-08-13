@@ -22,6 +22,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
   Album? _album;
   List<Song> _songs = [];
   bool _isLoading = true;
+  bool _isLiked = false;
 
   @override
   void initState() {
@@ -40,11 +41,27 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
         setState(() {
           _album = Album.fromJson(data);
           _songs = (data['songs'] as List?)?.map((e) => Song.fromJson(e)).toList() ?? [];
+          _isLiked = data['isLiked'] ?? false;
           _isLoading = false;
         });
       }
     } catch (_) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    try {
+      if (_isLiked) {
+        await apiClient.delete(ApiConstants.albumLike(widget.id));
+      } else {
+        await apiClient.post(ApiConstants.albumLike(widget.id));
+      }
+      setState(() => _isLiked = !_isLiked);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -65,13 +82,18 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: _isLiked ? AppColors.primary : AppColors.textPrimary,
+                ),
+                onPressed: _toggleLike,
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(album.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              background: SongCover(
-                path: album.coverPath,
-                size: double.infinity,
-                borderRadius: 0,
-              ),
+              background: SongCover(path: album.coverPath, size: double.infinity, borderRadius: 0),
             ),
           ),
           SliverToBoxAdapter(
@@ -80,10 +102,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    album.artistName ?? '',
-                    style: const TextStyle(color: AppColors.primary, fontSize: 16),
-                  ),
+                  Text(album.artistName ?? '', style: const TextStyle(color: AppColors.primary, fontSize: 16)),
                   const SizedBox(height: 4),
                   Text(
                     '${_songs.length} songs · ${album.releaseDate != null ? '${album.releaseDate!.year}' : 'Unknown year'}',
@@ -95,9 +114,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
                     height: 48,
                     child: ElevatedButton.icon(
                       onPressed: _songs.isNotEmpty
-                          ? () {
-                              ref.read(playerProvider.notifier).play(_songs.first, queue: _songs);
-                            }
+                          ? () => ref.read(playerProvider.notifier).playSong(_songs.first, queue: _songs, index: 0)
                           : null,
                       icon: const Icon(Icons.play_arrow, color: Colors.white),
                       label: const Text('Play', style: TextStyle(color: Colors.white)),
@@ -117,21 +134,13 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
                 final song = _songs[index];
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                  leading: Text(
-                    '${index + 1}',
-                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
-                  ),
+                  leading: Text('${index + 1}', style: const TextStyle(color: AppColors.textTertiary, fontSize: 14)),
                   title: Text(song.title, style: const TextStyle(color: AppColors.textPrimary)),
-                  subtitle: Text(
-                    song.durationFormatted ?? '',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                  trailing: Text(
-                    '${song.playCount} plays',
-                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
-                  ),
+                  subtitle: Text(song.durationFormatted ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  trailing: Text('${song.playCount} plays', style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
                   onTap: () {
-                    ref.read(playerProvider.notifier).play(song, queue: _songs);
+                    ref.read(playerProvider.notifier).playSong(song, queue: _songs, index: index);
+                    context.push('/now-playing');
                   },
                 );
               },

@@ -1,11 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/api_constants.dart';
 import '../../providers/player_provider.dart';
+import '../../services/api_client.dart';
 import '../../widgets/song_cover.dart';
 
-class NowPlayingScreen extends ConsumerWidget {
+class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});
+
+  @override
+  ConsumerState<NowPlayingScreen> createState() => _NowPlayingScreenState();
+}
+
+class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
+  bool _isLiked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkLiked();
+  }
+
+  Future<void> _checkLiked() async {
+    final song = ref.read(playerProvider).currentSong;
+    if (song == null) return;
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(
+        ApiConstants.song(song.id),
+        fromJson: (json) => json,
+      );
+      if (response.success && response.data != null && mounted) {
+        setState(() => _isLiked = response.data!['isLiked'] ?? false);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleLike() async {
+    final song = ref.read(playerProvider).currentSong;
+    if (song == null) return;
+    try {
+      if (_isLiked) {
+        await apiClient.delete(ApiConstants.like(song.id));
+      } else {
+        await apiClient.post(ApiConstants.like(song.id));
+      }
+      setState(() => _isLiked = !_isLiked);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  void _showAddToPlaylist() {
+    final song = ref.read(playerProvider).currentSong;
+    if (song == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _AddToPlaylistSheet(songId: song.id),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -115,12 +174,10 @@ class NowPlayingScreen extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: Icon(
-                        Icons.favorite_border,
-                        color: AppColors.textPrimary,
+                        _isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: _isLiked ? AppColors.primary : AppColors.textPrimary,
                       ),
-                      onPressed: () {
-                        // TODO: Like song
-                      },
+                      onPressed: _toggleLike,
                     ),
                   ],
                 ),
@@ -269,15 +326,23 @@ class NowPlayingScreen extends ConsumerWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.share, color: AppColors.textTertiary),
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Share coming soon')),
+                        );
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.download, color: AppColors.textTertiary),
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Download coming soon')),
+                        );
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.playlist_add, color: AppColors.textTertiary),
-                      onPressed: () {},
+                      onPressed: _showAddToPlaylist,
                     ),
                   ],
                 ),
@@ -295,5 +360,121 @@ class NowPlayingScreen extends ConsumerWidget {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+class _AddToPlaylistSheet extends StatefulWidget {
+  final String songId;
+
+  const _AddToPlaylistSheet({required this.songId});
+
+  @override
+  State<_AddToPlaylistSheet> createState() => _AddToPlaylistSheetState();
+}
+
+class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
+  List<Map<String, dynamic>> _playlists = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlaylists();
+  }
+
+  Future<void> _loadPlaylists() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(
+        ApiConstants.playlists,
+        fromJson: (json) => json,
+      );
+      if (response.success && response.data != null && mounted) {
+        setState(() {
+          _playlists = List<Map<String, dynamic>>.from(response.data!['data'] ?? []);
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addToPlaylist(String playlistId) async {
+    try {
+      await apiClient.post(
+        '${ApiConstants.playlist(playlistId)}/songs',
+        body: {'songId': widget.songId},
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Added to playlist')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.8,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Add to Playlist',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+              ),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                    : _playlists.isEmpty
+                        ? const Center(
+                            child: Text('No playlists yet', style: TextStyle(color: AppColors.textTertiary)),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: _playlists.length,
+                            itemBuilder: (context, index) {
+                              final playlist = _playlists[index];
+                              return ListTile(
+                                leading: const Icon(Icons.queue_music, color: AppColors.textPrimary),
+                                title: Text(playlist['name'] ?? '', style: const TextStyle(color: AppColors.textPrimary)),
+                                onTap: () => _addToPlaylist(playlist['id']),
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

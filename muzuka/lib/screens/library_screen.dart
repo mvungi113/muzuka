@@ -25,9 +25,7 @@ class LibraryScreen extends ConsumerWidget {
               context,
               icon: Icons.favorite,
               title: 'Liked Songs',
-              onTap: () {
-                // TODO: Navigate to liked songs
-              },
+              onTap: () => context.push('/liked-songs'),
             ),
             _buildMenuItem(
               context,
@@ -45,25 +43,25 @@ class LibraryScreen extends ConsumerWidget {
               context,
               icon: Icons.history,
               title: 'Recently Played',
-              onTap: () {
-                // TODO: Navigate to recently played
-              },
+              onTap: () => context.push('/recently-played'),
             ),
             _buildMenuItem(
               context,
               icon: Icons.album,
               title: 'Saved Albums',
-              onTap: () {
-                // TODO: Navigate to saved albums
-              },
+              onTap: () => context.push('/saved-albums'),
             ),
             _buildMenuItem(
               context,
               icon: Icons.people,
               title: 'Followed Artists',
-              onTap: () {
-                // TODO: Navigate to followed artists
-              },
+              onTap: () => context.push('/followed-artists'),
+            ),
+            _buildMenuItem(
+              context,
+              icon: Icons.person,
+              title: 'Profile',
+              onTap: () => context.push('/profile'),
             ),
             const Divider(color: AppColors.surfaceLight, height: 32),
             _buildMenuItem(

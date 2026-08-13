@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../core/constants/api_constants.dart';
@@ -6,20 +7,22 @@ import '../models/artist.dart';
 import '../models/song.dart';
 import '../models/album.dart';
 import '../services/api_client.dart';
+import '../providers/player_provider.dart';
 import '../widgets/song_cover.dart';
 
-class ArtistDetailScreen extends StatefulWidget {
+class ArtistDetailScreen extends ConsumerStatefulWidget {
   final String id;
 
   const ArtistDetailScreen({super.key, required this.id});
 
   @override
-  State<ArtistDetailScreen> createState() => _ArtistDetailScreenState();
+  ConsumerState<ArtistDetailScreen> createState() => _ArtistDetailScreenState();
 }
 
-class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
+class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
   Artist? _artist;
   bool _isLoading = true;
+  bool _isFollowing = false;
 
   @override
   void initState() {
@@ -36,11 +39,30 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
       if (response.success && response.data != null) {
         setState(() {
           _artist = Artist.fromJson(response.data!);
+          _isFollowing = response.data!['isFollowing'] ?? false;
           _isLoading = false;
         });
       }
     } catch (_) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    try {
+      if (_isFollowing) {
+        await apiClient.delete(ApiConstants.follow(widget.id));
+      } else {
+        await apiClient.post(ApiConstants.follow(widget.id));
+      }
+      setState(() => _isFollowing = !_isFollowing);
+      _loadArtist();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -64,12 +86,23 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilledButton.tonal(
+                  onPressed: _toggleFollow,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _isFollowing ? AppColors.primary : AppColors.surfaceLight,
+                    foregroundColor: _isFollowing ? Colors.white : AppColors.textPrimary,
+                  ),
+                  child: Text(_isFollowing ? 'Following' : 'Follow'),
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(artist.name, style: const TextStyle(fontWeight: FontWeight.bold)),
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                ),
+                decoration: BoxDecoration(gradient: AppColors.primaryGradient),
                 child: Center(
                   child: Text(
                     artist.name[0].toUpperCase(),
@@ -91,18 +124,10 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                   ),
                   if (artist.biography != null) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      artist.biography!,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(artist.biography!, style: const TextStyle(color: AppColors.textSecondary), maxLines: 3, overflow: TextOverflow.ellipsis),
                   ],
                   const SizedBox(height: 24),
-                  const Text(
-                    'Songs',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
+                  const Text('Songs', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 ],
               ),
             ),
@@ -118,7 +143,11 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                     leading: SongCover(path: songData.coverPath, size: 48),
                     title: Text(songData.title, style: const TextStyle(color: AppColors.textPrimary)),
                     subtitle: Text(songData.durationFormatted ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    onTap: () => context.push('/song/${songData.id}'),
+                    onTap: () {
+                      final parsedSongs = songs.map<Song>((s) => s is Map<String, dynamic> ? Song.fromJson(s) : s).toList();
+                      ref.read(playerProvider.notifier).playSong(songData, queue: parsedSongs, index: index);
+                      context.push('/now-playing');
+                    },
                   );
                 },
                 childCount: songs.length,
@@ -128,10 +157,7 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Text(
-                  'Albums',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                ),
+                child: Text('Albums', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
               ),
             ),
             SliverList(

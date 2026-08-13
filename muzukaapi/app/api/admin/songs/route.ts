@@ -2,8 +2,47 @@ import { NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
 import { songSchema } from '@/lib/validations';
-import { successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse, paginatedResponse, getPaginationParams } from '@/lib/api-response';
 import { uniqueSlug } from '@/lib/slug';
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdmin();
+    const { searchParams } = new URL(request.url);
+    const { page, limit, skip } = getPaginationParams(searchParams);
+    const status = searchParams.get('status');
+
+    const where: Record<string, unknown> = {};
+    if (status) where.status = status;
+
+    const [songs, total] = await Promise.all([
+      prisma.song.findMany({
+        where,
+        include: {
+          artist: { select: { id: true, name: true, slug: true } },
+          album: { select: { id: true, title: true, slug: true } },
+          genre: { select: { id: true, name: true, slug: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.song.count({ where }),
+    ]);
+
+    return Response.json(paginatedResponse(songs, page, limit, total));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    if (message === 'UNAUTHORIZED') {
+      return Response.json(errorResponse('Not authenticated', 'UNAUTHORIZED'), { status: 401 });
+    }
+    if (message === 'FORBIDDEN') {
+      return Response.json(errorResponse('Admin access required', 'FORBIDDEN'), { status: 403 });
+    }
+    console.error('Admin get songs error:', error);
+    return Response.json(errorResponse(message), { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
