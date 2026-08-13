@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Music streaming platform backend API",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
