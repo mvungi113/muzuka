@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/api_constants.dart';
 import '../../providers/player_provider.dart';
@@ -137,7 +138,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                   },
                                 ),
                                 ListTile(
-                                  leading: const Icon(Icons.artist, color: AppColors.textPrimary),
+                                  leading: const Icon(Icons.person, color: AppColors.textPrimary),
                                   title: const Text('Go to Artist', style: TextStyle(color: AppColors.textPrimary)),
                                   onTap: () {
                                     Navigator.pop(context);
@@ -244,7 +245,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                         activeTrackColor: AppColors.textPrimary,
                         inactiveTrackColor: AppColors.surfaceLight,
                         thumbColor: AppColors.textPrimary,
-                        overlayColor: AppColors.textPrimary.withOpacity(0.1),
+                        overlayColor: AppColors.textPrimary.withValues(alpha: 0.1),
                       ),
                       child: Slider(
                         value: player.duration.inMilliseconds > 0

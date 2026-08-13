@@ -9,8 +9,6 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
-
     return Scaffold(
       body: SafeArea(
         child: ListView(

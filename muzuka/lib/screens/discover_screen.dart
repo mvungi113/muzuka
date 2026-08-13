@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../core/constants/api_constants.dart';
 import '../models/genre.dart';
-import '../models/mood.dart';
 import '../services/api_client.dart';
 
 class DiscoverScreen extends ConsumerStatefulWidget {

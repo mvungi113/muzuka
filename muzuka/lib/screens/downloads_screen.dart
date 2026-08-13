@@ -58,12 +58,9 @@ class DownloadsScreen extends ConsumerWidget {
                                 playCount: 0,
                                 createdAt: DateTime.now(),
                                 coverPath: download.coverPath,
-                                artist: download.artistName != null
-                                    ? ArtistRef(id: '', name: download.artistName!, slug: '')
-                                    : null,
                               );
                               ref.read(playerProvider.notifier).playFromLocal(download.localPath, song);
-                              context.push('/now-playing');
+                              if (context.mounted) context.push('/now-playing');
                             } else if (value == 'delete') {
                               await ref.read(downloadsProvider.notifier).deleteDownload(download.songId);
                             }

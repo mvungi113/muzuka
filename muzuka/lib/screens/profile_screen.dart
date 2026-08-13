@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../core/constants/api_constants.dart';
-import '../models/user.dart';
 import '../services/api_client.dart';
 import '../providers/auth_provider.dart';
 

@@ -85,7 +85,7 @@ class _SavedAlbumsScreenState extends ConsumerState<SavedAlbumsScreen> {
                     return ListTile(
                       leading: SongCover(path: album.coverPath, size: 48, borderRadius: 4),
                       title: Text(album.title, style: const TextStyle(color: AppColors.textPrimary)),
-                      subtitle: Text(album.artist.name, style: const TextStyle(color: AppColors.textSecondary)),
+                      subtitle: Text(album.artist?.name ?? '', style: const TextStyle(color: AppColors.textSecondary)),
                       onTap: () => context.push('/album/${album.id}'),
                     );
                   },

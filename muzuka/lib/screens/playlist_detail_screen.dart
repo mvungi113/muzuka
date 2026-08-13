@@ -195,14 +195,14 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                                 ? const Icon(Icons.drag_handle, color: AppColors.textTertiary)
                                 : Text('${index + 1}', style: const TextStyle(color: AppColors.textTertiary)),
                             title: Text(song.title, style: const TextStyle(color: AppColors.textPrimary)),
-                            subtitle: Text(song.artist.name, style: const TextStyle(color: AppColors.textSecondary)),
+                            subtitle: Text(song.artist?.name ?? '', style: const TextStyle(color: AppColors.textSecondary)),
                             trailing: _isEditing
                                 ? IconButton(
                                     icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
                                     onPressed: () => _removeSong(song.id),
                                   )
                                 : Text(
-                                    '${(song.duration ~/ 60)}:${(song.duration % 60).toString().padLeft(2, '0')}',
+                                    song.duration != null ? '${(song.duration! ~/ 60)}:${(song.duration! % 60).toString().padLeft(2, '0')}' : '',
                                     style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
                                   ),
                             onTap: _isEditing

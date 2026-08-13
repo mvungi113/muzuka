@@ -5,7 +5,6 @@ import '../core/theme/app_theme.dart';
 import '../core/constants/api_constants.dart';
 import '../models/artist.dart';
 import '../services/api_client.dart';
-import '../widgets/song_cover.dart';
 
 class FollowedArtistsScreen extends ConsumerStatefulWidget {
   const FollowedArtistsScreen({super.key});
@@ -97,7 +96,7 @@ class _FollowedArtistsScreenState extends ConsumerState<FollowedArtistsScreen> {
                       ),
                       title: Text(artist.name, style: const TextStyle(color: AppColors.textPrimary)),
                       subtitle: Text(
-                        '${artist.followerCount ?? 0} followers',
+                        '${artist.followerCount} followers',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       onTap: () => context.push('/artist/${artist.id}'),

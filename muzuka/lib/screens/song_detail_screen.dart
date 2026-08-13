@@ -86,7 +86,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
       return Scaffold(body: Center(child: Text('Song not found', style: TextStyle(color: AppColors.textTertiary))));
     }
 
-    final isDownloaded = ref.watch(downloadsProvider).isDownloaded(song.id);
+    final isDownloaded = ref.read(downloadsProvider.notifier).isDownloaded(song.id);
 
     return Scaffold(
       appBar: AppBar(

@@ -1,4 +1,3 @@
-import 'artist.dart';
 import 'album.dart';
 
 class Song {

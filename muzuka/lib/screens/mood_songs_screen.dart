@@ -82,9 +82,9 @@ class _MoodSongsScreenState extends ConsumerState<MoodSongsScreen> {
                     return ListTile(
                       leading: SongCover(path: song.coverPath, size: 48, borderRadius: 4),
                       title: Text(song.title, style: const TextStyle(color: AppColors.textPrimary)),
-                      subtitle: Text(song.artist.name, style: const TextStyle(color: AppColors.textSecondary)),
+                      subtitle: Text(song.artist?.name ?? '', style: const TextStyle(color: AppColors.textSecondary)),
                       trailing: Text(
-                        '${(song.duration ~/ 60)}:${(song.duration % 60).toString().padLeft(2, '0')}',
+                        song.duration != null ? '${(song.duration! ~/ 60)}:${(song.duration! % 60).toString().padLeft(2, '0')}' : '',
                         style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
                       ),
                       onTap: () {
