@@ -1,7 +1,7 @@
 import { supabaseAdmin } from './supabase';
 
 export interface StorageProvider {
-  upload(bucket: string, path: string, file: File | Buffer): Promise<string>;
+  upload(bucket: string, path: string, file: File | Buffer, contentType?: string): Promise<string>;
   delete(bucket: string, path: string): Promise<void>;
   getUrl(bucket: string, path: string): string;
   getSignedUrl(bucket: string, path: string, expiresIn?: number): Promise<string>;
@@ -9,13 +9,19 @@ export interface StorageProvider {
 }
 
 export class SupabaseStorageProvider implements StorageProvider {
-  async upload(bucket: string, path: string, file: File | Buffer): Promise<string> {
+  async upload(bucket: string, path: string, file: File | Buffer, contentType?: string): Promise<string> {
+    const options: Record<string, unknown> = {
+      cacheControl: '3600',
+      upsert: false,
+    };
+
+    if (contentType) {
+      options.contentType = contentType;
+    }
+
     const { data, error } = await supabaseAdmin.storage
       .from(bucket)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+      .upload(path, file, options);
 
     if (error) {
       throw new Error(`Upload failed: ${error.message}`);

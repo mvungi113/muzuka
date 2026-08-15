@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         slug,
-        moodIds: moodIds?.length
+        songMoods: moodIds?.length
           ? { create: moodIds.map((moodId) => ({ moodId })) }
           : undefined,
       },

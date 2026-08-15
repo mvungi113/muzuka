@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import prisma from './prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
@@ -50,8 +50,19 @@ export async function removeAuthCookie() {
 }
 
 export async function getCurrentUser() {
-  const store = await cookies();
-  const token = store.get(COOKIE_NAME)?.value;
+  let token: string | undefined;
+
+  const hdrs = await headers();
+  const authHeader = hdrs.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  }
+
+  if (!token) {
+    const store = await cookies();
+    token = store.get(COOKIE_NAME)?.value;
+  }
+
   if (!token) return null;
 
   const payload = verifyToken(token);

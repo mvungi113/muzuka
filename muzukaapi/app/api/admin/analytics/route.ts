@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { playedAt: 'desc' },
         take: 20,
-      ]),
+      }),
       prisma.$queryRaw`
         SELECT
           DATE("playedAt") as date,

@@ -4,14 +4,25 @@ import { storage, STORAGE_BUCKETS } from '@/lib/storage';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { v4 as uuid } from 'uuid';
 
-const ALLOWED_AUDIO = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/mp4'];
-const ALLOWED_IMAGES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
-const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'];
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+const MIME_MAP: Record<string, string> = {
+  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg',
+  '.aac': 'audio/aac', '.m4a': 'audio/mp4', '.flac': 'audio/flac',
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+  '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif',
+};
 
 function getExtension(filename: string): string {
   const parts = filename.split('.');
   return parts.length > 1 ? `.${parts[parts.length - 1].toLowerCase()}` : '';
+}
+
+function getMimeType(ext: string): string {
+  return MIME_MAP[ext] || 'application/octet-stream';
 }
 
 function getBucket(type: string): string {
@@ -37,16 +48,10 @@ export async function POST(request: NextRequest) {
       return Response.json(errorResponse('No file provided', 'NO_FILE'), { status: 400 });
     }
 
-    const isAudio = type === 'song';
-    const allowedTypes = isAudio ? ALLOWED_AUDIO : ALLOWED_IMAGES;
+    const ext = getExtension(file.name);
+    const extLower = ext.replace('.', '');
+    const isAudio = type === 'song' || AUDIO_EXTENSIONS.includes(extLower);
     const maxSize = isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
-
-    if (!allowedTypes.includes(file.type)) {
-      return Response.json(
-        errorResponse(`Invalid file type: ${file.type}. Allowed: ${allowedTypes.join(', ')}`, 'INVALID_FILE_TYPE'),
-        { status: 400 }
-      );
-    }
 
     if (file.size > maxSize) {
       return Response.json(
@@ -55,12 +60,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ext = getExtension(file.name);
-    const path = `${uuid()}${ext}`;
     const bucket = getBucket(type);
+    const path = `${uuid()}${ext}`;
+    const contentType = getMimeType(ext);
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadedPath = await storage.upload(bucket, path, buffer);
+    const uploadedPath = await storage.upload(bucket, path, buffer, contentType);
 
     const url = storage.getUrl(bucket, uploadedPath);
 
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
         url,
         bucket,
         size: file.size,
-        type: file.type,
+        type: contentType,
         name: file.name,
       }),
       { status: 201 }

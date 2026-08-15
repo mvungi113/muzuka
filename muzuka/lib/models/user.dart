@@ -4,6 +4,7 @@ class User {
   final String email;
   final String? avatarUrl;
   final String role;
+  final bool isAnonymous;
   final DateTime createdAt;
 
   User({
@@ -12,6 +13,7 @@ class User {
     required this.email,
     this.avatarUrl,
     required this.role,
+    this.isAnonymous = false,
     required this.createdAt,
   });
 
@@ -21,6 +23,7 @@ class User {
         email: json['email'] ?? '',
         avatarUrl: json['avatarUrl'],
         role: json['role'] ?? 'USER',
+        isAnonymous: json['isAnonymous'] ?? false,
         createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       );
 
@@ -30,6 +33,7 @@ class User {
         'email': email,
         'avatarUrl': avatarUrl,
         'role': role,
+        'isAnonymous': isAnonymous,
         'createdAt': createdAt.toIso8601String(),
       };
 }

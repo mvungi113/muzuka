@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/api_constants.dart';
+
+const _tokenKey = 'muzuka_auth_token';
 
 class ApiResponse<T> {
   final bool success;
@@ -86,9 +89,22 @@ class ApiClient {
 
   ApiClient({this.baseUrl = ApiConstants.baseUrl});
 
-  void setToken(String? token) {
-    _token = token;
+  Future<void> loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString(_tokenKey);
   }
+
+  Future<void> setToken(String? token) async {
+    _token = token;
+    final prefs = await SharedPreferences.getInstance();
+    if (token != null) {
+      await prefs.setString(_tokenKey, token);
+    } else {
+      await prefs.remove(_tokenKey);
+    }
+  }
+
+  bool get hasToken => _token != null;
 
   Map<String, String> get _headers {
     final headers = <String, String>{

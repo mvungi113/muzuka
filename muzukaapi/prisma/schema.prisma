@@ -40,6 +40,8 @@ model User {
   avatarUrl    String?
   role         Role     @default(USER)
   authProvider String?
+  deviceId     String?  @unique
+  isAnonymous  Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
