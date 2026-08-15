@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/api_constants.dart';
 import '../../providers/player_provider.dart';
+import '../../providers/downloads_provider.dart';
 import '../../services/api_client.dart';
 import '../../widgets/song_cover.dart';
 
@@ -374,17 +376,23 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     IconButton(
                       icon: const Icon(Icons.share, color: AppColors.textTertiary),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Share coming soon')),
-                        );
+                        final song = ref.read(playerProvider).currentSong;
+                        if (song == null) return;
+                        final url = '${ApiConstants.baseUrl}/api/songs/${song.id}';
+                        launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.download, color: AppColors.textTertiary),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Download coming soon')),
-                        );
+                      onPressed: () async {
+                        final song = ref.read(playerProvider).currentSong;
+                        if (song == null) return;
+                        final downloaded = await ref.read(downloadsProvider.notifier).download(song);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(downloaded ? 'Downloaded ${song.title}' : 'Already downloaded')),
+                          );
+                        }
                       },
                     ),
                     IconButton(

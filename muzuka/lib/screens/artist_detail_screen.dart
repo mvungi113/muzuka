@@ -101,15 +101,17 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(artist.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              background: Container(
-                decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-                child: Center(
-                  child: Text(
-                    artist.name[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 80, color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+              background: artist.coverPath != null
+                  ? SongCover(path: artist.coverPath, size: double.infinity, borderRadius: 0, bucket: 'artist-images')
+                  : Container(
+                      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+                      child: Center(
+                        child: Text(
+                          artist.name[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 80, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
             ),
           ),
           SliverToBoxAdapter(

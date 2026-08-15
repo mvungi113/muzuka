@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -89,12 +90,9 @@ class DownloadsNotifier extends StateNotifier<DownloadsState> {
       if (await file.exists()) {
         final content = await file.readAsString();
         if (content.isNotEmpty) {
-          final List<dynamic> json = List<dynamic>.from(
-            (await Future.value(content)).isEmpty ? [] : [],
-          );
           try {
-            final parsed = (json).cast<Map<String, dynamic>>();
-            final downloads = parsed.map((e) => DownloadItem.fromJson(e)).toList();
+            final List<dynamic> jsonList = jsonDecode(content) as List<dynamic>;
+            final downloads = jsonList.cast<Map<String, dynamic>>().map((e) => DownloadItem.fromJson(e)).toList();
             state = state.copyWith(downloads: downloads, isLoading: false);
             return;
           } catch (_) {}
@@ -111,7 +109,7 @@ class DownloadsNotifier extends StateNotifier<DownloadsState> {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/downloads.json');
       final json = state.downloads.map((d) => d.toJson()).toList();
-      await file.writeAsString(json.toString());
+      await file.writeAsString(jsonEncode(json));
     } catch (_) {}
   }
 

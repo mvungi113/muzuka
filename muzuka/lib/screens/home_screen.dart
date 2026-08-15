@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
+import '../core/constants/api_constants.dart';
 import '../providers/auth_provider.dart';
 import '../providers/songs_provider.dart';
 import '../providers/recommendations_provider.dart';
@@ -63,13 +64,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         CircleAvatar(
                           radius: 20,
                           backgroundColor: AppColors.surfaceLight,
-                          child: Text(
-                            (auth.user?.name ?? 'M')[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          backgroundImage: auth.user?.avatarUrl != null
+                              ? NetworkImage('${ApiConstants.baseUrl}/api/files/avatars/${auth.user!.avatarUrl!}')
+                              : null,
+                          child: auth.user?.avatarUrl == null
+                              ? Text(
+                                  (auth.user?.name ?? 'M')[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
                       ],
                     ),

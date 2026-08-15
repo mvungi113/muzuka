@@ -131,13 +131,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           _sectionTitle('Artists'),
           ...state.artists.map((artist) => ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.surfaceLight,
-                  child: Text(
-                    artist.name[0].toUpperCase(),
-                    style: const TextStyle(color: AppColors.primary),
-                  ),
-                ),
+                leading: SongCover(path: artist.coverPath, size: 48, bucket: 'artist-images'),
                 title: Text(
                   artist.name,
                   style: const TextStyle(color: AppColors.textPrimary),

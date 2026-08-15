@@ -7,17 +7,19 @@ class SongCover extends StatelessWidget {
   final String? path;
   final double size;
   final double borderRadius;
+  final String bucket;
 
   const SongCover({
     super.key,
     this.path,
     this.size = 48,
     this.borderRadius = 8,
+    this.bucket = 'covers',
   });
 
   @override
   Widget build(BuildContext context) {
-    final url = path != null ? '${ApiConstants.baseUrl}/api/files/covers/$path' : null;
+    final url = path != null ? '${ApiConstants.baseUrl}/api/files/$bucket/$path' : null;
 
     return Container(
       width: size,

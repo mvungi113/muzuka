@@ -87,7 +87,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.surfaceLight,
-              backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
+              backgroundImage: user?.avatarUrl != null ? NetworkImage('${ApiConstants.baseUrl}/api/files/avatars/${user!.avatarUrl!}') : null,
               child: user?.avatarUrl == null
                   ? Text(
                       (user?.name ?? 'U')[0].toUpperCase(),

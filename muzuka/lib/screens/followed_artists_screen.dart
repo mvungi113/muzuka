@@ -5,6 +5,7 @@ import '../core/theme/app_theme.dart';
 import '../core/constants/api_constants.dart';
 import '../models/artist.dart';
 import '../services/api_client.dart';
+import '../widgets/song_cover.dart';
 
 class FollowedArtistsScreen extends ConsumerStatefulWidget {
   const FollowedArtistsScreen({super.key});
@@ -82,18 +83,7 @@ class _FollowedArtistsScreenState extends ConsumerState<FollowedArtistsScreen> {
                     }
                     final artist = _artists[index];
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.surfaceLight,
-                        backgroundImage: artist.imagePath != null
-                            ? NetworkImage(artist.imagePath!)
-                            : null,
-                        child: artist.imagePath == null
-                            ? Text(
-                                artist.name[0].toUpperCase(),
-                                style: const TextStyle(color: AppColors.textPrimary),
-                              )
-                            : null,
-                      ),
+                      leading: SongCover(path: artist.coverPath ?? artist.imagePath, size: 48, bucket: 'artist-images'),
                       title: Text(artist.name, style: const TextStyle(color: AppColors.textPrimary)),
                       subtitle: Text(
                         '${artist.followerCount} followers',
