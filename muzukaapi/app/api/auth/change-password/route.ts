@@ -32,7 +32,9 @@ export async function POST(request: NextRequest) {
       return Response.json(errorResponse('User not found', 'NOT_FOUND'), { status: 404 });
     }
 
-    const valid = await comparePassword(currentPassword, fullUser.passwordHash);
+    const valid = fullUser.passwordHash
+      ? await comparePassword(currentPassword, fullUser.passwordHash)
+      : false;
     if (!valid) {
       return Response.json(errorResponse('Current password is incorrect', 'INVALID_PASSWORD'), { status: 400 });
     }

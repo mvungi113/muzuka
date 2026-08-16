@@ -18,7 +18,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         where: { moodId },
         include: {
           song: {
-            where: { status: 'PUBLISHED' },
             include: {
               artist: { select: { id: true, name: true, slug: true, imagePath: true } },
               album: { select: { id: true, title: true, slug: true, coverPath: true } },

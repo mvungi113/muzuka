@@ -11,7 +11,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         songMoods: {
           include: {
             song: {
-              where: { status: 'PUBLISHED' },
               select: { id: true, title: true, slug: true, coverPath: true, duration: true, playCount: true },
             },
           },
