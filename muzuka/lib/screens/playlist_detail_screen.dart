@@ -72,7 +72,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
         body: {'songIds': _songs.map((s) => s.id).toList()},
       );
     } catch (_) {}
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void _showRenameDialog() {

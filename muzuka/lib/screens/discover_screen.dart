@@ -32,6 +32,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       ]);
       final genreRes = results[0];
       final moodRes = results[1];
+      if (!mounted) return;
       setState(() {
         if (genreRes.success && genreRes.data != null) {
           _genres = (genreRes.data!['data'] as List).map((e) => Genre.fromJson(e)).toList();
@@ -42,7 +43,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         _isLoading = false;
       });
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

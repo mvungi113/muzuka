@@ -55,7 +55,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
       } else {
         await apiClient.post(ApiConstants.like(_song!.id));
       }
-      setState(() => _isLiked = !_isLiked);
+      if (mounted) setState(() => _isLiked = !_isLiked);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));

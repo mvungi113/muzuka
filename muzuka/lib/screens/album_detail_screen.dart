@@ -36,6 +36,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
         '${ApiConstants.albums}/${widget.id}',
         fromJson: (json) => json as Map<String, dynamic>,
       );
+      if (!mounted) return;
       if (response.success && response.data != null) {
         final data = response.data!;
         setState(() {
@@ -46,7 +47,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
         });
       }
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -57,7 +58,7 @@ class _AlbumDetailScreenState extends ConsumerState<AlbumDetailScreen> {
       } else {
         await apiClient.post(ApiConstants.albumLike(widget.id));
       }
-      setState(() => _isLiked = !_isLiked);
+      if (mounted) setState(() => _isLiked = !_isLiked);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));

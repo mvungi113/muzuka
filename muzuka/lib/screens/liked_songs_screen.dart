@@ -33,6 +33,7 @@ class _LikedSongsScreenState extends ConsumerState<LikedSongsScreen> {
         '${ApiConstants.likedSongs}?page=$_page&limit=20',
         fromJson: (json) => json,
       );
+      if (!mounted) return;
       if (response.success && response.data != null) {
         final data = response.data!;
         final items = (data['data'] as List).map((e) => Song.fromJson(e)).toList();
@@ -48,7 +49,7 @@ class _LikedSongsScreenState extends ConsumerState<LikedSongsScreen> {
         });
       }
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

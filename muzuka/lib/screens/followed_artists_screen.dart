@@ -32,6 +32,7 @@ class _FollowedArtistsScreenState extends ConsumerState<FollowedArtistsScreen> {
         '${ApiConstants.followedArtists}?page=$_page&limit=20',
         fromJson: (json) => json,
       );
+      if (!mounted) return;
       if (response.success && response.data != null) {
         final data = response.data!;
         final items = (data['data'] as List).map((e) => Artist.fromJson(e)).toList();
@@ -47,7 +48,7 @@ class _FollowedArtistsScreenState extends ConsumerState<FollowedArtistsScreen> {
         });
       }
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

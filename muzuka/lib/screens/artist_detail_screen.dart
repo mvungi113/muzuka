@@ -36,6 +36,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
         '${ApiConstants.artists}/${widget.id}',
         fromJson: (json) => json as Map<String, dynamic>,
       );
+      if (!mounted) return;
       if (response.success && response.data != null) {
         setState(() {
           _artist = Artist.fromJson(response.data!);
@@ -44,7 +45,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
         });
       }
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -55,7 +56,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
       } else {
         await apiClient.post(ApiConstants.follow(widget.id));
       }
-      setState(() => _isFollowing = !_isFollowing);
+      if (mounted) setState(() => _isFollowing = !_isFollowing);
       _loadArtist();
     } catch (e) {
       if (mounted) {

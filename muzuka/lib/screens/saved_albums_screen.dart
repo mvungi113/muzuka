@@ -32,6 +32,7 @@ class _SavedAlbumsScreenState extends ConsumerState<SavedAlbumsScreen> {
         '${ApiConstants.likedAlbums}?page=$_page&limit=20',
         fromJson: (json) => json,
       );
+      if (!mounted) return;
       if (response.success && response.data != null) {
         final data = response.data!;
         final items = (data['data'] as List).map((e) => Album.fromJson(e)).toList();
@@ -47,7 +48,7 @@ class _SavedAlbumsScreenState extends ConsumerState<SavedAlbumsScreen> {
         });
       }
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
