@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
 
     return Response.json(paginatedResponse(songs, page, limit, total));
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
     console.error('Get songs error:', error);
-    return Response.json(errorResponse('Internal server error'), { status: 500 });
+    return Response.json(errorResponse(message), { status: 500 });
   }
 }
