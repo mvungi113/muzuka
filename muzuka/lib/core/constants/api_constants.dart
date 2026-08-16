@@ -2,7 +2,7 @@ class ApiConstants {
   ApiConstants._();
 
   // Base URL - overridable at build time via --dart-define=API_BASE_URL=https://your-api.vercel.app
-  static const String _defaultBaseUrl = 'https://muzukaapi.vercel.app';
+  static const String _defaultBaseUrl = 'https://muzuka-lac.vercel.app';
   static const String baseUrl =
       String.fromEnvironment('API_BASE_URL', defaultValue: _defaultBaseUrl);
 
