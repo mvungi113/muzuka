@@ -70,6 +70,7 @@ enum RepeatMode { off, all, one }
 class PlayerNotifier extends StateNotifier<PlayerState> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final ApiClient _api;
+  final Map<String, String> _urlCache = {};
 
   PlayerNotifier(this._api) : super(PlayerState()) {
     _audioPlayer.positionStream.listen((pos) {
@@ -87,35 +88,79 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
         _onComplete();
       }
     });
+    _audioPlayer.currentIndexStream.listen((index) {
+      if (index != null && index >= 0 && index < state.queue.length) {
+        final song = state.queue[index];
+        final changed = state.currentSong?.id != song.id;
+        state = state.copyWith(currentSong: song);
+        if (changed && song.id.isNotEmpty) {
+          recordHistory(song.id);
+        }
+      }
+    });
   }
 
   AudioPlayer get audioPlayer => _audioPlayer;
 
-  Future<void> play(Song song, {List<Song>? queue, int? index}) async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<String?> _resolveUrl(Song song) async {
+    if (_urlCache.containsKey(song.id)) return _urlCache[song.id];
     try {
       final response = await _api.get<Map<String, dynamic>>(
         ApiConstants.stream(song.id),
         fromJson: (json) => json as Map<String, dynamic>,
       );
-
       if (response.success && response.data != null) {
         final url = response.data!['url'] as String;
-        await _audioPlayer.setUrl(url);
+        _urlCache[song.id] = url;
+        return url;
+      }
+    } catch (_) {}
+    return null;
+  }
 
-        if (queue != null) {
-          state = state.copyWith(queue: queue);
-        }
+  Future<void> play(Song song, {List<Song>? queue, int? index}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final q = queue ?? [song];
+      final requested = index ?? q.indexWhere((s) => s.id == song.id);
+      final effectiveIndex = requested < 0 ? 0 : requested;
 
-        state = state.copyWith(currentSong: song, isLoading: false);
-        await _audioPlayer.play();
-        recordHistory(song.id);
-      } else {
+      final urls = await Future.wait(q.map((s) => _resolveUrl(s)));
+
+      final resolved = <Song, String>{};
+      for (var i = 0; i < q.length; i++) {
+        final u = urls[i];
+        if (u != null) resolved[q[i]] = u;
+      }
+
+      if (resolved.isEmpty) {
         state = state.copyWith(
           isLoading: false,
-          error: response.message ?? 'Failed to load song',
+          error: 'Failed to load song',
         );
+        return;
       }
+
+      final entries = resolved.entries.toList();
+      final children =
+          entries.map((e) => AudioSource.uri(Uri.parse(e.value))).toList();
+
+      var childIndex = entries.indexWhere((e) => e.key.id == q[effectiveIndex].id);
+      if (childIndex < 0) childIndex = 0;
+
+      final source = ConcatenatingAudioSource(children: children);
+      await _audioPlayer.setAudioSource(
+        source,
+        initialIndex: childIndex,
+        preload: true,
+      );
+
+      state = state.copyWith(
+        queue: entries.map((e) => e.key).toList(),
+        currentSong: entries[childIndex].key,
+        isLoading: false,
+      );
+      await _audioPlayer.play();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -125,7 +170,11 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await _audioPlayer.setFilePath(filePath);
-      state = state.copyWith(currentSong: song, isLoading: false);
+      state = state.copyWith(
+        queue: [song],
+        currentSong: song,
+        isLoading: false,
+      );
       await _audioPlayer.play();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -157,47 +206,52 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
   }
 
   Future<void> next() async {
-    if (!state.hasNext || state.currentSong == null) return;
-    final idx = state.queue.indexWhere((s) => s.id == state.currentSong!.id);
-    final nextSong = state.queue[idx + 1];
-    await play(nextSong);
+    if (_audioPlayer.hasNext) {
+      await _audioPlayer.seekToNext();
+    } else if (state.hasNext) {
+      final idx = state.queue.indexWhere((s) => s.id == state.currentSong!.id);
+      await play(state.queue[idx + 1]);
+    }
   }
 
   Future<void> previous() async {
-    if (!state.hasPrevious || state.currentSong == null) return;
-    final idx = state.queue.indexWhere((s) => s.id == state.currentSong!.id);
-    final prevSong = state.queue[idx - 1];
-    await play(prevSong);
+    if (_audioPlayer.hasPrevious) {
+      await _audioPlayer.seekToPrevious();
+    } else {
+      await _audioPlayer.seek(Duration.zero);
+    }
   }
 
   void toggleShuffle() {
-    state = state.copyWith(shuffle: !state.shuffle);
+    final next = !state.shuffle;
+    _audioPlayer.setShuffleModeEnabled(next);
+    state = state.copyWith(shuffle: next);
   }
 
   void cycleRepeat() {
+    late final RepeatMode nextMode;
+    late final LoopMode loopMode;
     switch (state.repeatMode) {
       case RepeatMode.off:
-        state = state.copyWith(repeatMode: RepeatMode.all);
+        nextMode = RepeatMode.all;
+        loopMode = LoopMode.all;
         break;
       case RepeatMode.all:
-        state = state.copyWith(repeatMode: RepeatMode.one);
+        nextMode = RepeatMode.one;
+        loopMode = LoopMode.one;
         break;
       case RepeatMode.one:
-        state = state.copyWith(repeatMode: RepeatMode.off);
+        nextMode = RepeatMode.off;
+        loopMode = LoopMode.off;
         break;
     }
+    _audioPlayer.setLoopMode(loopMode);
+    state = state.copyWith(repeatMode: nextMode);
   }
 
   void _onComplete() {
     if (state.currentSong != null) {
       recordHistory(state.currentSong!.id);
-    }
-    if (state.repeatMode == RepeatMode.one && state.currentSong != null) {
-      play(state.currentSong!);
-    } else if (state.hasNext) {
-      next();
-    } else {
-      state = state.copyWith(isPlaying: false);
     }
   }
 

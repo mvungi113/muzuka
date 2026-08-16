@@ -88,6 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Trending Now',
               songs: trending.songs,
               isLoading: trending.isLoading,
+              error: trending.error,
             ),
             if (recommendations.madeForYou.isNotEmpty)
               _buildSection(
@@ -108,6 +109,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'New Releases',
               songs: newReleases.songs,
               isLoading: newReleases.isLoading,
+              error: newReleases.error,
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
@@ -128,6 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String title,
     required List songs,
     required bool isLoading,
+    String? error,
   }) {
     return SliverToBoxAdapter(
       child: Column(
@@ -142,6 +145,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           if (isLoading)
             const HorizontalListShimmer()
+          else if (error != null)
+            SizedBox(
+              height: 180,
+              child: widgets.ErrorWidget(
+                message: error,
+                onRetry: () {},
+              ),
+            )
           else if (songs.isEmpty)
             SizedBox(
               height: 180,

@@ -15,13 +15,7 @@ export async function GET(
 
   const filePath = path.join('/');
 
-  const { data, error } = await supabaseAdmin.storage
-    .from(bucket)
-    .createSignedUrl(filePath, 3600);
+  const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(filePath);
 
-  if (error) {
-    return Response.json({ error: 'File not found' }, { status: 404 });
-  }
-
-  return Response.redirect(data.signedUrl, 302);
+  return Response.redirect(data.publicUrl, 302);
 }

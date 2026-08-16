@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { storage } from '@/lib/storage';
 import { errorResponse } from '@/lib/api-response';
 import { STORAGE_BUCKETS } from '@/lib/storage';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,9 +24,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return Response.json(errorResponse('Song not available', 'SONG_NOT_AVAILABLE'), { status: 403 });
     }
 
-    const signedUrl = await storage.getSignedUrl(STORAGE_BUCKETS.SONGS, song.audioPath, 3600);
+    const { data } = supabaseAdmin.storage
+      .from(STORAGE_BUCKETS.SONGS)
+      .getPublicUrl(song.audioPath);
 
-    return Response.json({ success: true, data: { url: signedUrl } });
+    return Response.json({ success: true, data: { url: data.publicUrl } });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
     if (message === 'UNAUTHORIZED') {
