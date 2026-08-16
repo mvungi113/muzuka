@@ -32,13 +32,13 @@ export function getSupabaseAdmin(): SupabaseClient {
 // Backwards-compatible aliases
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return (getSupabase() as Record<string | symbol, unknown>)[prop];
+    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return (getSupabaseAdmin() as Record<string | symbol, unknown>)[prop];
+    return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 
